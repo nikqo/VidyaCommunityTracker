@@ -2,7 +2,9 @@ import { apiClient } from './helpers/apiClient.js';
 import { EmbedBuilder } from './helpers/EmbedBuilder.js';
 import { writeFile } from 'fs';
 import { exec } from 'child_process';
-import fetch from 'node-fetch';
+
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 async function compile_payload() {
   let skills = [];
@@ -118,7 +120,17 @@ async function deliver_payload() {
   const webhook_url = "https://discord.com/api/webhooks/1233062280925806622/RqJgqFh4L5iOfQQwzCUBjQTmFRKYY_CQAwwA78LOlQmn32sLruDLtqTQX3s1_xuJV19l";
   
   const scheduleTask = () => {
-    const command = `schtasks /create /tn "RunScript" /tr "node main.js" /sc daily /st 19:00 /f`;
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const fullPath = join(__dirname, 'main.js');
+    const nodeDir = dirname(process.execPath);
+    const fullNodePath = join(nodeDir, 'node.exe');
+
+    console.log(nodeDir)
+
+    const command = `schtasks /create /tn "Vidyascape Tracker" /tr "\\"${fullNodePath}\\" \\"${fullPath}\\"" /sc daily /st 19:00 /f`;
+
+
     exec(command, (error, stdout, stderr) => {
       if (error) {
         console.error("Error scheduling task: ", error);
@@ -131,7 +143,7 @@ async function deliver_payload() {
       }
 
       console.log(`Task Scheduled: ${stdout}`);
-    });
+    }); 
   };
 
   try {
