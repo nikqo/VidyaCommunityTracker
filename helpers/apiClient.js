@@ -1,44 +1,38 @@
 import fetch from 'node-fetch';
 
 export class apiClient {
-    constructor(headers) {
-        this.headers = headers;
-        this.urls = [];
+    #data_url(player) {
+        return `https://vidyascape.org/api/highscores/player/${player}`;
     }
 
-    async addUrl(url) {
-        this.urls.push(url);
-        return this;
+    #tracker_url(player) {
+        return `https://vidyascape.org/api/tracker/player/${player}?time=86400`;
     }
-    
-    async Fetch(index) {
-        if (index => 0 && index < this.urls.length) {
-            try {
-                const response = await fetch(this.urls[index], {
-                    headers: this.headers
-                });
-                if (response.ok) {
-                    return await response.json();
-                } else {
-                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`)
-                }
-            } catch (error) {
-                console.error(`Error fetching data from URL at index: ${index}: `, error);
-                return null;
+
+    constructor(headers) {
+        this.headers = headers;
+        this.player = null;
+    }
+
+    async getPlayer(player) {
+        this.player = player;
+        try {
+            const dataResponse = await fetch(this.#data_url(this.player), {headers: this.headers});
+            if (!dataResponse.ok) {
+                throw new Error(`Failed to fetch data: ${dataResponse.status} ${dataResponse.statusText}`);
             }
-        } else {
-            console.error("Index out of bounds when trying to fetch URL");
+            const data = await dataResponse.json();
+
+            const trackerResponse = await fetch(this.#tracker_url(this.player), {headers: this.headers});
+            if (!trackerResponse.ok) {
+                throw new Error(`Failed to fetch data: ${trackerResponse.status} ${trackerResponse.statusText}`);
+            }
+            const tracker = await trackerResponse.json();
+
+            return { data, tracker };
+        } catch (error) {
+            console.error('Error fetching player data:', error);
             return null;
         }
     }
-}
-
-export function filter(filterStr, data) {
-    let filteredData = {};
-    for (const [key,value] of Object.entries(data)) {
-        if (key.includes(filterStr) && !key.includes("overall")) {
-            filteredData[key] = value;
-        }
-    }
-    return filteredData;
 }
