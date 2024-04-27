@@ -62,7 +62,7 @@ async function compile_payload() {
     }
 
     const levelsGainedText = levels_gained > 0 ? ` (+${levels_gained})` : '';
-    const fieldName = `${emoji} ${name}${levelsGainedText}`;
+    const fieldName = `${emoji} ${name} ${level} ${levelsGainedText}`;
 
     const field_value = `+${diff.toLocaleString()} XP gained.`;
 
@@ -87,17 +87,24 @@ async function compile_payload() {
     embed.addField(field.name, field.value, field.inline);
   })
 
-  // string contains [U+200E] character to force a new line
-  let totalLevelText = `${emojis.default['overall']} ${playerData.data.overall_lvl}`;
-  if (playerData.tracker.overall_diff <= 0) {
-    totalLevelText += '\n‎\nNo xp gained today. We can do better than that.';
-  } else if (playerData.tracker.overall_diff >= 1000000) {
-      totalLevelText += '\n‎\nMore than 1,000,000 exp gained today! Remarkable.';
-  } else if (playerData.tracker.overall_diff >= 100000) {
-      totalLevelText += '\n‎\nMore than 100,000 exp gained today. Great work!';
-  } else if (playerData.tracker.overall_diff >= 10000) {
-      totalLevelText += '\n‎\nMore than 10,000 exp gained today. At least somebody tried.';
+  function getXpMessage(xpGained) {
+    const thresholds = [
+      { limit: 10000000, message: "Oh my god! Somebody got more than 10 million experience today! It's time to touch some grass." },
+      { limit: 1000000, message: "More than 1,000,000 exp gained today. Remarkable." },
+      { limit: 100000, message: "More than 100,000 exp gained today. Great work!" },
+      { limit: 10000, message: "More than 10,000 exp gained today. At least somebody tried." },
+      { limit: 9999, message: "Less than 10,000 exp gained today. We can try harder than that." },
+      { limit: 0, message: "No xp gained today. We can do better than that." }
+    ];
+
+    for (let i = 0; i < thresholds.length; i++) {
+      if (xpGained >= thresholds[i].limit) {
+        return thresholds[i].message;
+      }
+    }
   }
+
+  let totalLevelText = `${emojis.default['overall']} ${playerData.data.overall_lvl}\n\u200E\n${getXpMessage(playerData.tracker.overall_diff)}`;
 
   writeFile('./storage/cache.json', JSON.stringify(playerData.data, null, 2), (err) => {
     if (err) {
