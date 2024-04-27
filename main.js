@@ -64,7 +64,7 @@ async function compile_payload() {
     const levelsGainedText = levels_gained > 0 ? ` (+${levels_gained})` : '';
     const fieldName = `${emoji} ${name}${levelsGainedText}`;
 
-    const field_value = `+${diff} XP gained.`;
+    const field_value = `+${diff.toLocaleString()} XP gained.`;
 
     return {
       name: fieldName,
