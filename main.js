@@ -93,7 +93,7 @@ async function compile_payload() {
       { limit: 1000000, message: "More than 1,000,000 exp gained today. Remarkable." },
       { limit: 100000, message: "More than 100,000 exp gained today. Great work!" },
       { limit: 10000, message: "More than 10,000 exp gained today. At least somebody tried." },
-      { limit: 9999, message: "Less than 10,000 exp gained today. We can try harder than that." },
+      { limit: 1, message: "Less than 10,000 exp gained today. We can try harder than that." },
       { limit: 0, message: "No xp gained today. We can do better than that." }
     ];
 
