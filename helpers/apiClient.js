@@ -1,38 +1,48 @@
-import fetch from 'node-fetch';
+import fetch from 'node-fetch'
 
-export class apiClient {
-    #data_url(player) {
-        return `https://vidyascape.org/api/highscores/player/${player}`;
-    }
+const TimePeriod = Object.freeze({
+    DAY: '86400',
+    WEEK: '604800',
+    MONTH: '2592000'
+});
 
-    #tracker_url(player) {
-        return `https://vidyascape.org/api/tracker/player/${player}?time=86400`;
-    }
+function apiUrl(path) {
+    return `https://vidyascape.org/api/${path}`;
+}
 
+class ApiClient {
     constructor(headers) {
         this.headers = headers;
-        this.player = null;
     }
 
-    async getPlayer(player) {
-        this.player = player;
+    async #fetchUrl(url) {
+        const response = await fetch(url, { headers: this.headers });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        }
+
+        return response.json();
+    }
+
+    async getPlayer(player, time = TimePeriod.DAY) {
         try {
-            const dataResponse = await fetch(this.#data_url(this.player), {headers: this.headers});
-            if (!dataResponse.ok) {
-                throw new Error(`Failed to fetch data: ${dataResponse.status} ${dataResponse.statusText}`);
-            }
-            const data = await dataResponse.json();
-
-            const trackerResponse = await fetch(this.#tracker_url(this.player), {headers: this.headers});
-            if (!trackerResponse.ok) {
-                throw new Error(`Failed to fetch data: ${trackerResponse.status} ${trackerResponse.statusText}`);
-            }
-            const tracker = await trackerResponse.json();
-
+            const data = await this.#fetchUrl(apiUrl(`highscores/player/${player}`));
+            const tracker = await this.#fetchUrl(apiUrl(`tracker/player/${player}?time=${time}`));
             return { data, tracker };
-        } catch (error) {
-            console.error('Error fetching player data:', error);
-            return null;
+        } catch (err) {
+            console.error(`Error fetching player data: ${err}`);
+            throw err;
+        }
+    }
+
+    async getLeaderboard(type) {
+        try {
+            return await this.#fetchUrl(apiUrl(`tracker/skill/overall/1?time=${type}`));
+        } catch (err) {
+            console.error(`Error fetching leaderboard data: ${err}`);
+            throw err;
         }
     }
 }
+
+export { ApiClient, TimePeriod };
